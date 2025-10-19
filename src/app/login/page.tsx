@@ -43,7 +43,7 @@ export default function LoginPage() {
         router.push("/dashboard")
         router.refresh()
       }
-    } catch (error) {
+    } catch {
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
@@ -137,7 +137,7 @@ export default function LoginPage() {
               </div>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link 
                 href="/register" 
                 className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-semibold hover:underline transition-colors"

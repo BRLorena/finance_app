@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const search = searchParams.get('search')
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       userId: session.user.id,
     }
 

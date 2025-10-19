@@ -35,7 +35,8 @@ type DashboardData = {
   }
 }
 
-export function DashboardContent({ userName }: { userName: string }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function DashboardContent({ userName: _userName }: { userName: string }) {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 

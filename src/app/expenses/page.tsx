@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ExpenseList } from "@/components/expense-list"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// Card components removed as they are not used in this component
 
 export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false)

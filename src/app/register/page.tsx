@@ -47,7 +47,7 @@ export default function RegisterPage() {
 
       // Redirect to login page with success message
       router.push("/login?message=Account created successfully")
-    } catch (error) {
+    } catch {
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)

@@ -24,7 +24,7 @@ export default async function DashboardPage() {
                 Welcome back, {session.user.name}!
               </h1>
               <p className="text-gray-300">
-                Here's your financial overview for today
+                Here&apos;s your financial overview for today
               </p>
             </div>
           </div>

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         break
     }
 
-    const whereCondition: any = {
+    const whereCondition: Record<string, unknown> = {
       userId: session.user.id,
     }
 
@@ -186,12 +186,12 @@ export async function GET(request: NextRequest) {
         netIncome: (thisMonthInvoices._sum.amount || 0) - (thisMonthExpenses._sum.amount || 0),
       },
       breakdown: {
-        expensesByCategory: expensesByCategory.map((item: any) => ({
+        expensesByCategory: expensesByCategory.map((item: { category: string; _sum: { amount: number | null }; _count: number }) => ({
           category: item.category,
           amount: item._sum.amount || 0,
           count: item._count,
         })),
-        invoicesByStatus: invoicesByStatus.map((item: any) => ({
+        invoicesByStatus: invoicesByStatus.map((item: { status: string; _sum: { amount: number | null }; _count: number }) => ({
           status: item.status,
           amount: item._sum.amount || 0,
           count: item._count,

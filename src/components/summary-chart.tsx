@@ -62,6 +62,7 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
 
   useEffect(() => {
     fetchSummaryData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period])
 
   const fetchSummaryData = async () => {

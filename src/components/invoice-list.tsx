@@ -81,6 +81,7 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
 
   useEffect(() => {
     fetchInvoices()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, status, search])
 
   const handleDelete = async (invoiceId: string) => {

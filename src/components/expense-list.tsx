@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -70,6 +70,7 @@ export function ExpenseList({ showForm = false, onFormToggle }: ExpenseListProps
       }
 
       const data = await response.json()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setExpenses(data.expenses.map((expense: any) => ({
         ...expense,
         date: new Date(expense.date),
@@ -87,6 +88,7 @@ export function ExpenseList({ showForm = false, onFormToggle }: ExpenseListProps
 
   useEffect(() => {
     fetchExpenses()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, dateRange])
 
   const handleDelete = async (id: string) => {
