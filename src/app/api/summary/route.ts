@@ -74,13 +74,13 @@ export async function GET(request: NextRequest) {
       // Monthly expenses for the last 12 months
       prisma.$queryRaw`
         SELECT 
-          strftime('%Y-%m', date) as month,
+          TO_CHAR(date, 'YYYY-MM') as month,
           SUM(amount) as total,
           COUNT(*) as count
         FROM expenses 
-        WHERE userId = ${session.user.id}
-          AND date >= datetime('now', '-12 months')
-        GROUP BY strftime('%Y-%m', date)
+        WHERE "userId" = ${session.user.id}
+          AND date >= NOW() - INTERVAL '12 months'
+        GROUP BY TO_CHAR(date, 'YYYY-MM')
         ORDER BY month DESC
       `,
 
@@ -109,13 +109,13 @@ export async function GET(request: NextRequest) {
       // Monthly invoices for the last 12 months
       prisma.$queryRaw`
         SELECT 
-          strftime('%Y-%m', issueDate) as month,
+          TO_CHAR("issueDate", 'YYYY-MM') as month,
           SUM(amount) as total,
           COUNT(*) as count
         FROM invoices 
-        WHERE userId = ${session.user.id}
-          AND issueDate >= datetime('now', '-12 months')
-        GROUP BY strftime('%Y-%m', issueDate)
+        WHERE "userId" = ${session.user.id}
+          AND "issueDate" >= NOW() - INTERVAL '12 months'
+        GROUP BY TO_CHAR("issueDate", 'YYYY-MM')
         ORDER BY month DESC
       `,
 
