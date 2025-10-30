@@ -112,7 +112,7 @@ export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
         {isEditing ? 'Edit Income' : 'Add New Income'}
       </h3>
       
-      <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="amount" className="text-white">Amount</Label>

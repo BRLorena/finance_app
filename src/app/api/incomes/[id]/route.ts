@@ -6,7 +6,7 @@ import { incomeFormSchema } from "@/lib/validations"
 // GET /api/incomes/[id] - Get specific income
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -15,9 +15,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const income = await prisma.income.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
     })
@@ -39,7 +41,7 @@ export async function GET(
 // PUT /api/incomes/[id] - Update income
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -48,6 +50,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const validatedFields = incomeFormSchema.safeParse(body)
 
@@ -63,7 +66,7 @@ export async function PUT(
     // Check if income exists and belongs to user
     const existingIncome = await prisma.income.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
     })
@@ -73,7 +76,7 @@ export async function PUT(
     }
 
     const income = await prisma.income.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         amount: parseFloat(amount),
         description,
@@ -97,7 +100,7 @@ export async function PUT(
 // DELETE /api/incomes/[id] - Delete income
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -106,10 +109,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Check if income exists and belongs to user
     const existingIncome = await prisma.income.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
     })
@@ -119,7 +124,7 @@ export async function DELETE(
     }
 
     await prisma.income.delete({
-      where: { id: params.id },
+      where: { id: id },
     })
 
     return NextResponse.json({ message: "Income deleted successfully" })
