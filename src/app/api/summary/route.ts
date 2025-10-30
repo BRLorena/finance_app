@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         orderBy: { _sum: { amount: "desc" } },
       }),
 
-      // Monthly expenses for the last 12 months
+      // Monthly expenses for the last 12 months (PostgreSQL)
       prisma.$queryRaw`
         SELECT 
           TO_CHAR(date, 'YYYY-MM') as month,
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
         _count: true,
       }),
 
-      // Monthly invoices for the last 12 months
+      // Monthly invoices for the last 12 months (PostgreSQL)
       prisma.$queryRaw`
         SELECT 
           TO_CHAR("issueDate", 'YYYY-MM') as month,
@@ -217,7 +217,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error generating summary:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error", 
+        details: error instanceof Error ? error.message : "Unknown error",
+        stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : 'No stack trace') : undefined
+      },
       { status: 500 }
     )
   }
