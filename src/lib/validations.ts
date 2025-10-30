@@ -27,6 +27,25 @@ export const expenseFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
 })
 
+// Income validation schemas
+export const incomeSchema = z.object({
+  amount: z.number().positive("Amount must be positive"),
+  description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
+  date: z.date(),
+  recurring: z.boolean().default(false),
+  frequency: z.string().optional(),
+})
+
+export const incomeFormSchema = z.object({
+  amount: z.string().min(1, "Amount is required"),
+  description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
+  date: z.string().min(1, "Date is required"),
+  recurring: z.boolean(),
+  frequency: z.string().optional(),
+})
+
 // Invoice validation schemas
 export const invoiceSchema = z.object({
   invoiceNumber: z.string().optional(),
@@ -93,6 +112,8 @@ export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type ExpenseInput = z.infer<typeof expenseSchema>
 export type ExpenseFormInput = z.infer<typeof expenseFormSchema>
+export type IncomeInput = z.infer<typeof incomeSchema>
+export type IncomeFormInput = z.infer<typeof incomeFormSchema>
 export type InvoiceInput = z.infer<typeof invoiceSchema>
 export type InvoiceFormInput = z.infer<typeof invoiceFormSchema>
 export type SummaryParamsInput = z.infer<typeof summaryParamsSchema>

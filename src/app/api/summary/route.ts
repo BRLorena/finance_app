@@ -50,6 +50,10 @@ export async function GET(request: NextRequest) {
       expensesByCategory,
       monthlyExpenses,
       recentExpenses,
+      totalIncomes,
+      incomesByCategory,
+      monthlyIncomes,
+      recentIncomes,
       totalInvoices,
       invoicesByStatus,
       monthlyInvoices,
@@ -91,6 +95,42 @@ export async function GET(request: NextRequest) {
         take: 5,
       }),
 
+      // Total incomes
+      prisma.income.aggregate({
+        where: whereCondition,
+        _sum: { amount: true },
+        _count: true,
+      }),
+
+      // Incomes by category
+      prisma.income.groupBy({
+        by: ["category"],
+        where: whereCondition,
+        _sum: { amount: true },
+        _count: true,
+        orderBy: { _sum: { amount: "desc" } },
+      }),
+
+      // Monthly incomes for the last 12 months (SQLite)
+      prisma.$queryRaw`
+        SELECT 
+          strftime('%Y-%m', date) as month,
+          SUM(amount) as total,
+          COUNT(*) as count
+        FROM incomes 
+        WHERE userId = ${session.user.id}
+          AND date >= datetime('now', '-12 months')
+        GROUP BY strftime('%Y-%m', date)
+        ORDER BY month DESC
+      `,
+
+      // Recent incomes
+      prisma.income.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      }),
+
       // Total invoices
       prisma.invoice.aggregate({
         where: whereCondition,
@@ -127,17 +167,29 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
-    // Calculate net income (invoices - expenses)
+    // Calculate net income (incomes + invoices - expenses)
     const totalInvoiceAmount = totalInvoices._sum.amount || 0
+    const totalIncomeAmount = totalIncomes._sum.amount || 0
     const totalExpenseAmount = totalExpenses._sum.amount || 0
-    const netIncome = totalInvoiceAmount - totalExpenseAmount
+    const netIncome = totalIncomeAmount + totalInvoiceAmount - totalExpenseAmount
 
     // Calculate this month's data
     const thisMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
     const thisMonthEnd = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
 
-    const [thisMonthExpenses, thisMonthInvoices] = await Promise.all([
+    const [thisMonthExpenses, thisMonthIncomes, thisMonthInvoices] = await Promise.all([
       prisma.expense.aggregate({
+        where: {
+          userId: session.user.id,
+          createdAt: {
+            gte: thisMonthStart,
+            lte: thisMonthEnd,
+          },
+        },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.income.aggregate({
         where: {
           userId: session.user.id,
           createdAt: {
@@ -168,6 +220,10 @@ export async function GET(request: NextRequest) {
           amount: totalExpenseAmount,
           count: totalExpenses._count,
         },
+        incomes: {
+          amount: totalIncomeAmount,
+          count: totalIncomes._count,
+        },
         invoices: {
           amount: totalInvoiceAmount,
           count: totalInvoices._count,
@@ -179,14 +235,23 @@ export async function GET(request: NextRequest) {
           amount: thisMonthExpenses._sum.amount || 0,
           count: thisMonthExpenses._count,
         },
+        incomes: {
+          amount: thisMonthIncomes._sum.amount || 0,
+          count: thisMonthIncomes._count,
+        },
         invoices: {
           amount: thisMonthInvoices._sum.amount || 0,
           count: thisMonthInvoices._count,
         },
-        netIncome: (thisMonthInvoices._sum.amount || 0) - (thisMonthExpenses._sum.amount || 0),
+        netIncome: (thisMonthIncomes._sum.amount || 0) + (thisMonthInvoices._sum.amount || 0) - (thisMonthExpenses._sum.amount || 0),
       },
       breakdown: {
         expensesByCategory: expensesByCategory.map((item: { category: string; _sum: { amount: number | null }; _count: number }) => ({
+          category: item.category,
+          amount: item._sum.amount || 0,
+          count: item._count,
+        })),
+        incomesByCategory: incomesByCategory.map((item: { category: string; _sum: { amount: number | null }; _count: number }) => ({
           category: item.category,
           amount: item._sum.amount || 0,
           count: item._count,
@@ -199,10 +264,12 @@ export async function GET(request: NextRequest) {
       },
       trends: {
         monthlyExpenses: monthlyExpenses as Array<{ month: string; total: number; count: number }>,
+        monthlyIncomes: monthlyIncomes as Array<{ month: string; total: number; count: number }>,
         monthlyInvoices: monthlyInvoices as Array<{ month: string; total: number; count: number }>,
       },
       recent: {
         expenses: recentExpenses,
+        incomes: recentIncomes,
         invoices: recentInvoices,
       },
       meta: {

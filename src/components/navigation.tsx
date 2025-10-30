@@ -10,6 +10,7 @@ export function Navigation() {
   const links = [
     { href: "/dashboard", label: "Dashboard", icon: "🏠" },
     { href: "/expenses", label: "Expenses", icon: "💸" },
+    { href: "/incomes", label: "Income", icon: "💰" },
     { href: "/invoices", label: "Invoices", icon: "🧾" },
     { href: "/summary", label: "Summary", icon: "📊" },
   ]

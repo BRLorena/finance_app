@@ -8,16 +8,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 type DashboardData = {
   totals: {
     expenses: { amount: number; count: number }
+    incomes: { amount: number; count: number }
     invoices: { amount: number; count: number }
     netIncome: number
   }
   thisMonth: {
     expenses: { amount: number; count: number }
+    incomes: { amount: number; count: number }
     invoices: { amount: number; count: number }
     netIncome: number
   }
   recent: {
     expenses: Array<{
+      id: string
+      amount: number
+      description: string
+      category: string
+      date: string
+    }>
+    incomes: Array<{
       id: string
       amount: number
       description: string
@@ -76,8 +85,8 @@ export function DashboardContent({ userName: _userName }: { userName: string }) 
     return (
       <div className="space-y-12">
         {/* Loading skeleton for stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
             <Card key={i} className="border-0 shadow-xl">
               <CardHeader>
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
@@ -94,25 +103,43 @@ export function DashboardContent({ userName: _userName }: { userName: string }) 
   }
 
   const hasExpenses = data && data.totals.expenses.count > 0
+  const hasIncomes = data && data.totals.incomes.count > 0
   const hasInvoices = data && data.totals.invoices.count > 0
 
   return (
     <div className="space-y-12">
       {/* Enhanced Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-sm font-semibold text-green-800 dark:text-green-300">Total Expenses</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
+            <CardTitle className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Total Expenses</CardTitle>
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center">
               <span className="text-lg text-white">💸</span>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+            <div className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">
               {data ? formatCurrency(data.totals.expenses.amount) : "$0.00"}
             </div>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+            <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
               {data ? `${data.totals.expenses.count} expenses recorded` : "No expenses recorded yet"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-sm font-semibold text-green-800 dark:text-green-300">Total Income</CardTitle>
+            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
+              <span className="text-lg text-white">�</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+              {data ? formatCurrency(data.totals.incomes.amount) : "$0.00"}
+            </div>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+              {data ? `${data.totals.incomes.count} income entries recorded` : "No income recorded yet"}
             </p>
           </CardContent>
         </Card>
@@ -157,12 +184,12 @@ export function DashboardContent({ userName: _userName }: { userName: string }) 
       </div>
 
       {/* Enhanced Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-lg flex items-center justify-center">
                   <span className="text-sm text-white">💸</span>
                 </div>
                 <div>
@@ -183,12 +210,12 @@ export function DashboardContent({ userName: _userName }: { userName: string }) 
                 {data!.recent.expenses.slice(0, 3).map((expense) => (
                   <div key={expense.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div>
-                      <p className="font-medium text-sm">{expense.description}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="font-medium text-sm text-gray-200">{expense.description}</p>
+                      <p className="text-xs text-gray-400">
                         {expense.category} • {formatDate(expense.date)}
                       </p>
                     </div>
-                    <span className="font-bold text-red-600 text-sm">
+                    <span className="font-bold text-red-300 text-sm">
                       -{formatCurrency(expense.amount)}
                     </span>
                   </div>
@@ -200,9 +227,61 @@ export function DashboardContent({ userName: _userName }: { userName: string }) 
                   <span className="text-2xl">📈</span>
                 </div>
                 <p className="text-gray-500 dark:text-gray-400 mb-6">No expenses recorded yet</p>
-                <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                <Button asChild className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 shadow-lg hover:shadow-xl transition-all duration-200">
                   <Link href="/expenses" className="flex items-center gap-2">
                     <span>✨</span> Add Your First Expense
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
+                  <span className="text-sm text-white">💰</span>
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Recent Income</CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400">Your latest income entries</CardDescription>
+                </div>
+              </div>
+              {hasIncomes && (
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/incomes">View All</Link>
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {hasIncomes && data!.recent.incomes.length > 0 ? (
+              <div className="space-y-3">
+                {data!.recent.incomes.slice(0, 3).map((income) => (
+                  <div key={income.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div>
+                      <p className="font-medium text-sm text-gray-200">{income.description}</p>
+                      <p className="text-xs text-gray-400">
+                        {income.category} • {formatDate(income.date)}
+                      </p>
+                    </div>
+                    <span className="font-bold text-green-300 text-sm">
+                      +{formatCurrency(income.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-4">
+                  <span className="text-2xl">💰</span>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">No income recorded yet</p>
+                <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <Link href="/incomes" className="flex items-center gap-2">
+                    <span>✨</span> Add Your First Income
                   </Link>
                 </Button>
               </div>
@@ -235,13 +314,13 @@ export function DashboardContent({ userName: _userName }: { userName: string }) 
                 {data!.recent.invoices.slice(0, 3).map((invoice) => (
                   <div key={invoice.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div>
-                      <p className="font-medium text-sm">{invoice.clientName}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="font-medium text-sm text-gray-200">{invoice.clientName}</p>
+                      <p className="text-xs text-gray-400">
                         {invoice.invoiceNumber} • Due {formatDate(invoice.dueDate)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-green-600 text-sm">
+                      <p className="font-bold text-green-300 text-sm">
                         {formatCurrency(invoice.amount)}
                       </p>
                       <p className={`text-xs font-medium ${
@@ -296,6 +375,28 @@ export function DashboardContent({ userName: _userName }: { userName: string }) 
                 <span className="font-medium text-gray-900 dark:text-white">Account Created</span>
               </div>
               <span className="text-sm bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-3 py-1 rounded-full font-medium">Complete</span>
+            </div>
+            
+            <div className={`flex items-center justify-between p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl border ${
+              hasIncomes ? "border-green-200 dark:border-green-800" : "border-yellow-200 dark:border-yellow-800"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  hasIncomes ? "bg-green-100 dark:bg-green-900" : "bg-yellow-100 dark:bg-yellow-900"
+                }`}>
+                  <span className={hasIncomes ? "text-green-600 dark:text-green-400" : "text-yellow-600 dark:text-yellow-400"}>
+                    {hasIncomes ? "✓" : "⏳"}
+                  </span>
+                </div>
+                <span className="font-medium text-gray-900 dark:text-white">Add First Income</span>
+              </div>
+              <span className={`text-sm px-3 py-1 rounded-full font-medium ${
+                hasIncomes 
+                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300" 
+                  : "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
+              }`}>
+                {hasIncomes ? "Complete" : "Pending"}
+              </span>
             </div>
             
             <div className={`flex items-center justify-between p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl border ${

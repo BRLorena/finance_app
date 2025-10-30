@@ -7,24 +7,36 @@ import { Button } from "@/components/ui/button"
 type SummaryData = {
   totals: {
     expenses: { amount: number; count: number }
+    incomes: { amount: number; count: number }
     invoices: { amount: number; count: number }
     netIncome: number
   }
   thisMonth: {
     expenses: { amount: number; count: number }
+    incomes: { amount: number; count: number }
     invoices: { amount: number; count: number }
     netIncome: number
   }
   breakdown: {
     expensesByCategory: Array<{ category: string; amount: number; count: number }>
+    incomesByCategory: Array<{ category: string; amount: number; count: number }>
     invoicesByStatus: Array<{ status: string; amount: number; count: number }>
   }
   trends: {
     monthlyExpenses: Array<{ month: string; total: number; count: number }>
+    monthlyIncomes: Array<{ month: string; total: number; count: number }>
     monthlyInvoices: Array<{ month: string; total: number; count: number }>
   }
   recent: {
     expenses: Array<{
+      id: string
+      amount: number
+      description: string
+      category: string
+      date: string
+      createdAt: string
+    }>
+    incomes: Array<{
       id: string
       amount: number
       description: string
@@ -55,10 +67,11 @@ type SummaryChartProps = {
   onPeriodChange?: (period: string) => void
 }
 
-export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartProps) {
+export function SummaryChart({ period: initialPeriod = "all", onPeriodChange }: SummaryChartProps) {
   const [data, setData] = useState<SummaryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [period, setPeriod] = useState(initialPeriod)
 
   useEffect(() => {
     fetchSummaryData()
@@ -73,6 +86,15 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
       const params = new URLSearchParams()
       if (period !== "all") {
         params.append("period", period)
+        
+        // Add current year and month for period filtering
+        const now = new Date()
+        if (period === "month") {
+          params.append("year", now.getFullYear().toString())
+          params.append("month", (now.getMonth() + 1).toString())
+        } else if (period === "year") {
+          params.append("year", now.getFullYear().toString())
+        }
       }
       
       const response = await fetch(`/api/summary?${params}`)
@@ -88,6 +110,11 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePeriodChange = (newPeriod: string) => {
+    setPeriod(newPeriod)
+    onPeriodChange?.(newPeriod)
   }
 
   const formatCurrency = (amount: number) => {
@@ -154,7 +181,7 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
           <Button
             key={p}
             variant={period === p ? "default" : "outline"}
-            onClick={() => onPeriodChange?.(p)}
+            onClick={() => handlePeriodChange(p)}
             className="capitalize"
           >
             {p === "all" ? "All Time" : `This ${p}`}
@@ -175,10 +202,10 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-              {formatCurrency(data.totals.invoices.amount)}
+              {formatCurrency(data.totals.incomes.amount)}
             </div>
             <p className="text-xs text-green-600 dark:text-green-400">
-              {data.totals.invoices.count} invoices
+              {data.totals.incomes.count} income entries recorded
             </p>
           </CardContent>
         </Card>
@@ -250,7 +277,43 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
       </div>
 
       {/* Breakdown Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Income by Category */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-lg">💰</span>
+              Income by Category
+            </CardTitle>
+            <CardDescription>
+              Breakdown of your income by category
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data.breakdown.incomesByCategory.length > 0 ? (
+              <div className="space-y-4">
+                {data.breakdown.incomesByCategory.map((item, index) => (
+                  <div key={item.category} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-4 h-4 rounded"
+                        style={{
+                          backgroundColor: `hsl(${(index * 137.5 + 120) % 360}, 70%, 50%)`
+                        }}
+                      />
+                      <span className="font-medium capitalize">{item.category}</span>
+                      <span className="text-sm text-gray-500">({item.count})</span>
+                    </div>
+                    <span className="font-bold">{formatCurrency(item.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No income data available</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Expenses by Category */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
@@ -327,7 +390,41 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
       </div>
 
       {/* Recent Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Income */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-lg">💰</span>
+              Recent Income
+            </CardTitle>
+            <CardDescription>
+              Your latest income entries
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data.recent.incomes.length > 0 ? (
+              <div className="space-y-3">
+                {data.recent.incomes.map((income) => (
+                  <div key={income.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-200">{income.description}</p>
+                      <p className="text-sm text-gray-400">
+                        {income.category} • {formatDate(income.date)}
+                      </p>
+                    </div>
+                    <span className="font-bold text-green-300">
+                      +{formatCurrency(income.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No recent income</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Recent Expenses */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
@@ -345,12 +442,12 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
                 {data.recent.expenses.map((expense) => (
                   <div key={expense.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div>
-                      <p className="font-medium">{expense.description}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-200">{expense.description}</p>
+                      <p className="text-sm text-gray-400">
                         {expense.category} • {formatDate(expense.date)}
                       </p>
                     </div>
-                    <span className="font-bold text-red-600">
+                    <span className="font-bold text-red-300">
                       -{formatCurrency(expense.amount)}
                     </span>
                   </div>
@@ -379,13 +476,13 @@ export function SummaryChart({ period = "all", onPeriodChange }: SummaryChartPro
                 {data.recent.invoices.map((invoice) => (
                   <div key={invoice.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div>
-                      <p className="font-medium">{invoice.clientName}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-200">{invoice.clientName}</p>
+                      <p className="text-sm text-gray-400">
                         {invoice.invoiceNumber} • {formatDate(invoice.dueDate)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-green-600">
+                      <p className="font-bold text-green-300">
                         {formatCurrency(invoice.amount)}
                       </p>
                       <p className={`text-xs font-medium ${

@@ -23,6 +23,7 @@ model User {
 
   expenses Expense[]
   invoices Invoice[]
+  incomes  Income[]
 
   @@map("users")
 }
@@ -58,6 +59,22 @@ model Invoice {
   updatedAt     DateTime      @updatedAt
 
   @@map("invoices")
+}
+
+model Income {
+  id          String      @id @default(cuid())
+  amount      Float
+  description String
+  category    String      // e.g., "Salary", "Freelance", "Investment", "Business", "Other"
+  date        DateTime
+  recurring   Boolean     @default(false) // For recurring income like salary
+  frequency   String?     // "monthly", "weekly", "bi-weekly", etc.
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("incomes")
 }
 
 enum InvoiceStatus {
