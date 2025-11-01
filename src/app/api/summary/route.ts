@@ -75,18 +75,32 @@ export async function GET(request: NextRequest) {
         orderBy: { _sum: { amount: "desc" } },
       }),
 
-      // Monthly expenses for the last 12 months (PostgreSQL)
-      prisma.$queryRaw`
-        SELECT 
-          TO_CHAR(date, 'YYYY-MM') as month,
-          SUM(amount) as total,
-          COUNT(*) as count
-        FROM expenses 
-        WHERE "userId" = ${session.user.id}
-          AND date >= NOW() - INTERVAL '12 months'
-        GROUP BY TO_CHAR(date, 'YYYY-MM')
-        ORDER BY month DESC
-      `,
+      // Monthly expenses for the last 12 months (using Prisma ORM instead of raw SQL)
+      prisma.expense.findMany({
+        where: {
+          userId: session.user.id,
+          date: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1),
+          },
+        },
+        select: {
+          amount: true,
+          date: true,
+        },
+      }).then((expenses: { amount: number; date: Date }[]) => {
+        const monthlyData: Record<string, { total: number; count: number }> = {}
+        expenses.forEach((expense: { amount: number; date: Date }) => {
+          const month = expense.date.toISOString().slice(0, 7) // YYYY-MM format
+          if (!monthlyData[month]) {
+            monthlyData[month] = { total: 0, count: 0 }
+          }
+          monthlyData[month].total += expense.amount
+          monthlyData[month].count += 1
+        })
+        return Object.entries(monthlyData)
+          .map(([month, data]) => ({ month, total: data.total, count: data.count }))
+          .sort((a, b) => b.month.localeCompare(a.month))
+      }),
 
       // Recent expenses
       prisma.expense.findMany({
@@ -111,18 +125,32 @@ export async function GET(request: NextRequest) {
         orderBy: { _sum: { amount: "desc" } },
       }),
 
-      // Monthly incomes for the last 12 months (PostgreSQL)
-      prisma.$queryRaw`
-        SELECT 
-          TO_CHAR(date, 'YYYY-MM') as month,
-          SUM(amount) as total,
-          COUNT(*) as count
-        FROM incomes 
-        WHERE "userId" = ${session.user.id}
-          AND date >= NOW() - INTERVAL '12 months'
-        GROUP BY TO_CHAR(date, 'YYYY-MM')
-        ORDER BY month DESC
-      `,
+      // Monthly incomes for the last 12 months (using Prisma ORM instead of raw SQL)
+      prisma.income.findMany({
+        where: {
+          userId: session.user.id,
+          date: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1),
+          },
+        },
+        select: {
+          amount: true,
+          date: true,
+        },
+      }).then((incomes: { amount: number; date: Date }[]) => {
+        const monthlyData: Record<string, { total: number; count: number }> = {}
+        incomes.forEach((income: { amount: number; date: Date }) => {
+          const month = income.date.toISOString().slice(0, 7) // YYYY-MM format
+          if (!monthlyData[month]) {
+            monthlyData[month] = { total: 0, count: 0 }
+          }
+          monthlyData[month].total += income.amount
+          monthlyData[month].count += 1
+        })
+        return Object.entries(monthlyData)
+          .map(([month, data]) => ({ month, total: data.total, count: data.count }))
+          .sort((a, b) => b.month.localeCompare(a.month))
+      }),
 
       // Recent incomes
       prisma.income.findMany({
@@ -146,18 +174,32 @@ export async function GET(request: NextRequest) {
         _count: true,
       }),
 
-      // Monthly invoices for the last 12 months (PostgreSQL)
-      prisma.$queryRaw`
-        SELECT 
-          TO_CHAR("issueDate", 'YYYY-MM') as month,
-          SUM(amount) as total,
-          COUNT(*) as count
-        FROM invoices 
-        WHERE "userId" = ${session.user.id}
-          AND "issueDate" >= NOW() - INTERVAL '12 months'
-        GROUP BY TO_CHAR("issueDate", 'YYYY-MM')
-        ORDER BY month DESC
-      `,
+      // Monthly invoices for the last 12 months (using Prisma ORM instead of raw SQL)
+      prisma.invoice.findMany({
+        where: {
+          userId: session.user.id,
+          issueDate: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1),
+          },
+        },
+        select: {
+          amount: true,
+          issueDate: true,
+        },
+      }).then((invoices: { amount: number; issueDate: Date }[]) => {
+        const monthlyData: Record<string, { total: number; count: number }> = {}
+        invoices.forEach((invoice: { amount: number; issueDate: Date }) => {
+          const month = invoice.issueDate.toISOString().slice(0, 7) // YYYY-MM format
+          if (!monthlyData[month]) {
+            monthlyData[month] = { total: 0, count: 0 }
+          }
+          monthlyData[month].total += invoice.amount
+          monthlyData[month].count += 1
+        })
+        return Object.entries(monthlyData)
+          .map(([month, data]) => ({ month, total: data.total, count: data.count }))
+          .sort((a, b) => b.month.localeCompare(a.month))
+      }),
 
       // Recent invoices
       prisma.invoice.findMany({
