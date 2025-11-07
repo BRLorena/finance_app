@@ -1,7 +1,7 @@
 import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { DashboardContent } from "@/components/dashboard-content"
+import { SummaryChart } from "@/components/summary-chart"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Dashboard Content */}
-        <DashboardContent userName={session.user.name || "User"} />
+        <SummaryChart />
       </div>
     </div>
   )

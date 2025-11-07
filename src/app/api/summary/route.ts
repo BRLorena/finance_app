@@ -218,6 +218,37 @@ export async function GET(request: NextRequest) {
     // Calculate this month's data
     const thisMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
     const thisMonthEnd = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
+    const currentMonthName = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })
+
+    // For filtered periods, calculate period-specific data
+    let periodData = null
+    let periodName = ""
+    
+    if (period === "month" || period === "year") {
+      periodData = await Promise.all([
+        prisma.expense.aggregate({
+          where: whereCondition,
+          _sum: { amount: true },
+          _count: true,
+        }),
+        prisma.income.aggregate({
+          where: whereCondition,
+          _sum: { amount: true },
+          _count: true,
+        }),
+        prisma.invoice.aggregate({
+          where: whereCondition,
+          _sum: { amount: true },
+          _count: true,
+        }),
+      ])
+      
+      if (period === "month") {
+        periodName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+      } else {
+        periodName = `Year ${year}`
+      }
+    }
 
     const [thisMonthExpenses, thisMonthIncomes, thisMonthInvoices] = await Promise.all([
       prisma.expense.aggregate({
@@ -286,7 +317,24 @@ export async function GET(request: NextRequest) {
           count: thisMonthInvoices._count,
         },
         netIncome: (thisMonthIncomes._sum.amount || 0) + (thisMonthInvoices._sum.amount || 0) - (thisMonthExpenses._sum.amount || 0),
+        monthName: currentMonthName,
       },
+      selectedPeriod: periodData ? {
+        expenses: {
+          amount: periodData[0]._sum.amount || 0,
+          count: periodData[0]._count,
+        },
+        incomes: {
+          amount: periodData[1]._sum.amount || 0,
+          count: periodData[1]._count,
+        },
+        invoices: {
+          amount: periodData[2]._sum.amount || 0,
+          count: periodData[2]._count,
+        },
+        netIncome: (periodData[1]._sum.amount || 0) + (periodData[2]._sum.amount || 0) - (periodData[0]._sum.amount || 0),
+        periodName,
+      } : undefined,
       breakdown: {
         expensesByCategory: expensesByCategory.map((item: { category: string; _sum: { amount: number | null }; _count: number }) => ({
           category: item.category,
