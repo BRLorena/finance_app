@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslations, useLocale } from 'next-intl'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
@@ -40,6 +41,9 @@ const statusEmojis = {
 }
 
 export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
+  const t = useTranslations('invoices')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -51,6 +55,28 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
     total: 0,
     pages: 0,
   })
+
+  const localeMap: Record<string, string> = {
+    en: 'en-US',
+    pt: 'pt-BR',
+    es: 'es-ES',
+    fr: 'fr-FR'
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(localeMap[locale] || 'en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString(localeMap[locale] || 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
 
   const fetchInvoices = async () => {
     try {
@@ -107,36 +133,21 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
   return (
     <Card className="backdrop-blur-md bg-white/10 border border-white/20 shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          Your Invoices
+          {t('yourInvoices')}
         </CardTitle>
         <CardDescription className="text-gray-300">
-          Manage and track all your invoices
+          {t('manageInvoices')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <Input
-            placeholder="Search invoices..."
+            placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400"
@@ -146,11 +157,11 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
             onChange={(e) => setStatus(e.target.value)}
             className="px-3 py-2 bg-white/5 border border-white/20 rounded-md text-white focus:border-blue-400 focus:outline-none min-w-[140px]"
           >
-            <option value="all" className="bg-gray-800">All Status</option>
-            <option value="PENDING" className="bg-gray-800">Pending</option>
-            <option value="PAID" className="bg-gray-800">Paid</option>
-            <option value="OVERDUE" className="bg-gray-800">Overdue</option>
-            <option value="CANCELLED" className="bg-gray-800">Cancelled</option>
+            <option value="all" className="bg-gray-800">{t('allStatuses')}</option>
+            <option value="PENDING" className="bg-gray-800">{t('statuses.pending')}</option>
+            <option value="PAID" className="bg-gray-800">{t('statuses.paid')}</option>
+            <option value="OVERDUE" className="bg-gray-800">{t('statuses.overdue')}</option>
+            <option value="CANCELLED" className="bg-gray-800">{t('statuses.cancelled')}</option>
           </select>
         </div>
 
@@ -164,13 +175,8 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
             <div className="w-16 h-16 mx-auto bg-white/10 rounded-2xl flex items-center justify-center mb-4">
               <span className="text-2xl">📄</span>
             </div>
-            <p className="text-gray-400 mb-4">No invoices found</p>
-            <p className="text-sm text-gray-500">
-              {search || status !== "all" 
-                ? "Try adjusting your search or filters" 
-                : "Create your first invoice to get started"
-              }
-            </p>
+            <p className="text-gray-400 mb-4">{t('noInvoices')}</p>
+            <p className="text-sm text-gray-500">{t('startCreating')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -186,15 +192,15 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
                         {invoice.invoiceNumber}
                       </h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[invoice.status as keyof typeof statusColors]}`}>
-                        {statusEmojis[invoice.status as keyof typeof statusEmojis]} {invoice.status.toLowerCase()}
+                        {statusEmojis[invoice.status as keyof typeof statusEmojis]} {t(`statuses.${invoice.status.toLowerCase()}`)}
                       </span>
                     </div>
                     <p className="text-gray-300 mb-1">{invoice.clientName}</p>
                     <p className="text-sm text-gray-400 mb-2">{invoice.description}</p>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-400">
-                      <span>Amount: <span className="text-green-400 font-medium">{formatCurrency(invoice.amount)}</span></span>
-                      <span>Due: {formatDate(invoice.dueDate)}</span>
-                      <span>Created: {formatDate(invoice.createdAt)}</span>
+                      <span>{t('amount')}: <span className="text-green-400 font-medium">{formatCurrency(invoice.amount)}</span></span>
+                      <span>{t('due')}: {formatDate(invoice.dueDate)}</span>
+                      <span>{t('issued')}: {formatDate(invoice.createdAt)}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -204,7 +210,7 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
                       onClick={() => onEdit?.(invoice)}
                       className="border-white/20 text-gray-300 hover:bg-white/10 hover:text-white"
                     >
-                      Edit
+                      {tCommon('edit')}
                     </Button>
                     <Button
                       size="sm"
@@ -212,7 +218,7 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
                       onClick={() => handleDelete(invoice.id)}
                       className="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                     >
-                      Delete
+                      {tCommon('delete')}
                     </Button>
                   </div>
                 </div>
@@ -231,10 +237,10 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
               disabled={page === 1}
               className="border-white/20 text-gray-300 hover:bg-white/10 hover:text-white disabled:opacity-50"
             >
-              Previous
+              {tCommon('previous')}
             </Button>
             <span className="text-gray-300 px-4">
-              Page {pagination.page} of {pagination.pages}
+              {tCommon('page')} {pagination.page} {tCommon('of')} {pagination.pages}
             </span>
             <Button
               size="sm"
@@ -243,7 +249,7 @@ export function InvoiceList({ onEdit, onSuccess }: InvoiceListProps) {
               disabled={page === pagination.pages}
               className="border-white/20 text-gray-300 hover:bg-white/10 hover:text-white disabled:opacity-50"
             >
-              Next
+              {tCommon('next')}
             </Button>
           </div>
         )}

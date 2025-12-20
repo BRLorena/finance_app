@@ -1,18 +1,21 @@
 "use client"
 
-import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 import { Button } from "@/components/ui/button"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 export function Navigation() {
   const pathname = usePathname()
+  const t = useTranslations('nav')
 
   const links = [
-    { href: "/dashboard", label: "Dashboard", icon: "🏠" },
-    { href: "/expenses", label: "Expenses", icon: "💸" },
-    { href: "/incomes", label: "Income", icon: "💰" },
-    { href: "/invoices", label: "Invoices", icon: "🧾" },
-    { href: "/summary", label: "Summary", icon: "📊" },
+    { href: "/dashboard", label: t('dashboard'), icon: "🏠" },
+    { href: "/expenses", label: t('expenses'), icon: "💸" },
+    { href: "/incomes", label: t('incomes'), icon: "💰" },
+    { href: "/invoices", label: t('invoices'), icon: "🧾" },
+    { href: "/summary", label: t('summary'), icon: "📊" },
   ]
 
   // Don't show navigation on auth pages
@@ -50,14 +53,18 @@ export function Navigation() {
             </div>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-gray-700/60 hover:text-white">
-              <span className="sr-only">Open menu</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </Button>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-gray-700/60 hover:text-white">
+                <span className="sr-only">Open menu</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </Button>
+            </div>
           </div>
         </div>
 

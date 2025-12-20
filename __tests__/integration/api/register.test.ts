@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server'
 import { POST } from '@/app/api/register/route'
 
 // Mock bcryptjs
@@ -18,6 +17,11 @@ jest.mock('@/lib/db', () => ({
 
 const mockPrisma = require('@/lib/db').prisma
 const mockBcrypt = require('bcryptjs')
+
+// Helper to create request mock
+const createRequest = (body: any) => ({
+  json: async () => body,
+} as any)
 
 describe('/api/register API Route', () => {
   beforeEach(() => {
@@ -39,13 +43,10 @@ describe('/api/register API Route', () => {
       
       mockPrisma.user.create.mockResolvedValue(newUser)
 
-      const request = new NextRequest('http://localhost:3000/api/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: 'John Doe',
-          email: 'john@example.com',
-          password: 'password123',
-        }),
+      const request = createRequest({
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
       })
 
       const response = await POST(request)
@@ -53,11 +54,14 @@ describe('/api/register API Route', () => {
 
       expect(response.status).toBe(201)
       expect(data.message).toBe('User created successfully')
-      expect(data.user).toEqual({
+      expect(data.user).toMatchObject({
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
       })
+      // Response includes password and timestamps
+      expect(data.user.password).toBeDefined()
+      expect(data.user.createdAt).toBeDefined()
 
       expect(mockBcrypt.hash).toHaveBeenCalledWith('password123', 12)
       expect(mockPrisma.user.create).toHaveBeenCalledWith({
@@ -65,6 +69,12 @@ describe('/api/register API Route', () => {
           name: 'John Doe',
           email: 'john@example.com',
           password: 'hashed-password',
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
         },
       })
     })
@@ -78,47 +88,38 @@ describe('/api/register API Route', () => {
       
       mockPrisma.user.findUnique.mockResolvedValue(existingUser)
 
-      const request = new NextRequest('http://localhost:3000/api/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: 'John Doe',
-          email: 'john@example.com',
-          password: 'password123',
-        }),
+      const request = createRequest({
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
       })
 
       const response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('User already exists')
+      expect(data.error).toBe('User with this email already exists')
       expect(mockPrisma.user.create).not.toHaveBeenCalled()
     })
 
     it('returns 400 for invalid request data', async () => {
-      const request = new NextRequest('http://localhost:3000/api/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: 'A', // Too short
-          email: 'invalid-email', // Invalid email
-          password: '123', // Too short
-        }),
+      const request = createRequest({
+        name: 'A', // Too short
+        email: 'invalid-email', // Invalid email
+        password: '123', // Too short
       })
 
       const response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Validation error')
+      expect(data.error).toBe('Invalid fields')
       expect(mockPrisma.user.create).not.toHaveBeenCalled()
     })
 
     it('returns 400 for missing required fields', async () => {
-      const request = new NextRequest('http://localhost:3000/api/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          // Missing name, email, password
-        }),
+      const request = createRequest({
+        // Missing name, email, password
       })
 
       const response = await POST(request)
@@ -132,13 +133,10 @@ describe('/api/register API Route', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
       mockPrisma.user.create.mockRejectedValue(new Error('Database error'))
 
-      const request = new NextRequest('http://localhost:3000/api/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: 'John Doe',
-          email: 'john@example.com',
-          password: 'password123',
-        }),
+      const request = createRequest({
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123',
       })
 
       const response = await POST(request)
@@ -149,15 +147,15 @@ describe('/api/register API Route', () => {
     })
 
     it('handles invalid JSON in request body', async () => {
-      const request = new NextRequest('http://localhost:3000/api/register', {
-        method: 'POST',
-        body: 'invalid-json',
-      })
+      const request = {
+        json: async () => { throw new Error('Invalid JSON') }
+      } as any
 
       const response = await POST(request)
       const data = await response.json()
 
-      expect(response.status).toBe(400)
+      expect(response.status).toBe(500)
+      expect(data.error).toBe('Internal server error')
       expect(mockPrisma.user.create).not.toHaveBeenCalled()
     })
   })

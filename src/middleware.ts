@@ -1,11 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function middleware(_request: NextRequest) {
-  // For now, just pass through all requests
-  return NextResponse.next()
-}
-
+import createMiddleware from 'next-intl/middleware';
+import {routing} from './i18n/routing';
+ 
+export default createMiddleware(routing);
+ 
 export const config = {
-  matcher: [],
-}
+  // Match only internationalized pathnames, exclude API routes and static files
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
+};

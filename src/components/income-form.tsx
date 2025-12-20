@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations } from 'next-intl'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,23 +29,25 @@ interface IncomeFormProps {
 }
 
 const INCOME_CATEGORIES = [
-  "Salary",
-  "Freelance", 
-  "Business",
-  "Investment",
-  "Rental",
-  "Other"
+  "salary",
+  "freelance",
+  "business",
+  "investment",
+  "rental",
+  "other"
 ]
 
 const FREQUENCIES = [
   "weekly",
-  "bi-weekly",
+  "biWeekly",
   "monthly",
   "quarterly",
   "yearly"
 ]
 
 export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
+  const t = useTranslations('incomes')
+  const tCommon = useTranslations('common')
   const [isLoading, setIsLoading] = useState(false)
   const isEditing = !!income
 
@@ -109,13 +112,13 @@ export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
   return (
     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 shadow-xl">
       <h3 className="text-2xl font-bold text-white mb-6">
-        {isEditing ? 'Edit Income' : 'Add New Income'}
+        {isEditing ? t('editIncome') : t('addIncome')}
       </h3>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="amount" className="text-white">Amount</Label>
+            <Label htmlFor="amount" className="text-white">{t('amount')}</Label>
             <Input
               id="amount"
               type="number"
@@ -130,16 +133,16 @@ export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="category" className="text-white">Category</Label>
+            <Label htmlFor="category" className="text-white">{t('category')}</Label>
             <select
               id="category"
               className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               {...register("category")}
             >
-              <option value="">Select a category</option>
+              <option value="">{t('selectCategory')}</option>
               {INCOME_CATEGORIES.map((category) => (
                 <option key={category} value={category} className="text-black">
-                  {category}
+                  {t(`categories.${category}`)}
                 </option>
               ))}
             </select>
@@ -149,10 +152,10 @@ export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="description" className="text-white">Description</Label>
+            <Label htmlFor="description" className="text-white">{t('description')}</Label>
             <Input
               id="description"
-              placeholder="e.g., Monthly salary, Freelance project"
+              placeholder={t('descriptionPlaceholder')}
               className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
               {...register("description")}
             />
@@ -162,7 +165,7 @@ export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="date" className="text-white">Date</Label>
+            <Label htmlFor="date" className="text-white">{t('date')}</Label>
             <Input
               id="date"
               type="date"
@@ -184,22 +187,22 @@ export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
               {...register("recurring")}
             />
             <Label htmlFor="recurring" className="text-white">
-              This is recurring income
+              {t('recurring')}
             </Label>
           </div>
 
           {isRecurring && (
             <div>
-              <Label htmlFor="frequency" className="text-white">Frequency</Label>
+              <Label htmlFor="frequency" className="text-white">{t('frequency')}</Label>
               <select
                 id="frequency"
                 className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 {...register("frequency")}
               >
-                <option value="">Select frequency</option>
+                <option value="">{tCommon('select')} {t('frequency').toLowerCase()}</option>
                 {FREQUENCIES.map((freq) => (
                   <option key={freq} value={freq} className="text-black">
-                    {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                    {t(`frequencies.${freq}`)}
                   </option>
                 ))}
               </select>
@@ -216,16 +219,15 @@ export function IncomeForm({ income, onSuccess, onCancel }: IncomeFormProps) {
             disabled={isLoading}
             className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
           >
-            {isLoading ? (isEditing ? "Updating..." : "Adding...") : (isEditing ? "Update Income" : "Add Income")}
+            {isLoading ? tCommon('loading') : (isEditing ? t('updateIncome') : t('addIncome'))}
           </Button>
           {onCancel && (
             <Button
               type="button"
-              variant="outline"
               onClick={onCancel}
-              className="flex-1 border-white/20 text-white hover:bg-white/10"
+              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
           )}
         </div>
