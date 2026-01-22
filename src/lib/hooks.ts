@@ -93,6 +93,8 @@ export function useCachedFetch<T>(
     }
   }, [url, cacheDuration])
 
+  // Debounced fetch for use with search inputs, etc.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const debouncedFetch = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
