@@ -18,9 +18,12 @@ jest.mock('@/lib/db', () => ({
 const mockPrisma = require('@/lib/db').prisma
 const mockBcrypt = require('bcryptjs')
 
-// Helper to create request mock
+// Helper to create request mock with headers for rate limiting
 const createRequest = (body: any) => ({
   json: async () => body,
+  headers: {
+    get: (name: string) => name === 'x-forwarded-for' ? '127.0.0.1' : null,
+  },
 } as any)
 
 describe('/api/register API Route', () => {

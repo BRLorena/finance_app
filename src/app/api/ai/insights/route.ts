@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 import { generateFinancialInsights } from '@/lib/groq'
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +10,18 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting - AI is expensive, limit to 10 requests per minute
+    const rateLimitResult = rateLimit(session.user.id, 'ai-insights', RATE_LIMITS.ai)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many AI requests. Please wait before trying again.' },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult, RATE_LIMITS.ai)
+        }
+      )
     }
 
     const body = await request.json()
@@ -109,7 +122,12 @@ export async function POST(request: NextRequest) {
       currentMonthTotal,
     }, locale)
 
-    return NextResponse.json(insights)
+    // Cache AI insights for 5 minutes to reduce CPU usage
+    return NextResponse.json(insights, {
+      headers: {
+        'Cache-Control': 'private, s-maxage=300, stale-while-revalidate=600',
+      },
+    })
   } catch (error) {
     console.error('Error generating insights:', error)
     return NextResponse.json(

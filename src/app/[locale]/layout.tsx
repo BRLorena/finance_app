@@ -5,6 +5,8 @@ import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
 import { Navigation } from "@/components/navigation"
 import { AuthProvider } from "@/components/auth-provider"
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import "../globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -45,6 +47,9 @@ export default async function LocaleLayout({
             }}
           />
         </NextIntlClientProvider>
+        {/* Vercel Analytics - monitor usage to stay within limits */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

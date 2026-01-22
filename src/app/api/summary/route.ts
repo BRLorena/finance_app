@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from "@/lib/rate-limit"
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,6 +9,18 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Rate limiting - heavy endpoint
+    const rateLimitResult = rateLimit(session.user.id, 'summary', RATE_LIMITS.heavy)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult, RATE_LIMITS.heavy)
+        }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -370,7 +383,12 @@ export async function GET(request: NextRequest) {
       },
     }
 
-    return NextResponse.json(summary)
+    // Add caching to reduce server CPU usage
+    return NextResponse.json(summary, {
+      headers: {
+        'Cache-Control': 'private, s-maxage=60, stale-while-revalidate=120',
+      },
+    })
   } catch (error) {
     console.error("Error generating summary:", error)
     return NextResponse.json(

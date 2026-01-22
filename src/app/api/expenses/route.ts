@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
 import { expenseFormSchema } from "@/lib/validations"
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from "@/lib/rate-limit"
 
 // GET /api/expenses - Get user's expenses
 export async function GET(request: NextRequest) {
@@ -10,6 +11,18 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Rate limiting
+    const rateLimitResult = rateLimit(session.user.id, 'expenses', RATE_LIMITS.standard)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult, RATE_LIMITS.standard)
+        }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -46,6 +59,7 @@ export async function GET(request: NextRequest) {
       prisma.expense.count({ where }),
     ])
 
+    // Add short cache to reduce server load
     return NextResponse.json({
       expenses,
       pagination: {
@@ -53,6 +67,10 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         pages: Math.ceil(total / limit),
+      },
+    }, {
+      headers: {
+        'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
       },
     })
   } catch (error) {

@@ -1,9 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useTranslations, useLocale } from 'next-intl'
+
+// Simple cache for summary data to reduce API calls
+const summaryCache = new Map<string, { data: SummaryData; timestamp: number }>()
+const CACHE_DURATION = 30000 // 30 seconds
 
 type SummaryData = {
   totals: {
@@ -86,45 +90,79 @@ export function SummaryChart({ period: initialPeriod = "all", onPeriodChange }: 
     'es': 'es-ES',
     'fr': 'fr-FR'
   }
+  
+  // Ref for abort controller to cancel pending requests
+  const abortControllerRef = useRef<AbortController | null>(null)
 
-  useEffect(() => {
-    fetchSummaryData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period])
-
-  const fetchSummaryData = async () => {
+  const fetchSummaryData = useCallback(async (skipCache = false) => {
+    // Build cache key
+    const params = new URLSearchParams()
+    if (period !== "all") {
+      params.append("period", period)
+      const now = new Date()
+      if (period === "month") {
+        params.append("year", now.getFullYear().toString())
+        params.append("month", (now.getMonth() + 1).toString())
+      } else if (period === "year") {
+        params.append("year", now.getFullYear().toString())
+      }
+    }
+    const cacheKey = params.toString() || 'all'
+    
+    // Check cache first (unless skip requested)
+    if (!skipCache) {
+      const cached = summaryCache.get(cacheKey)
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        setData(cached.data)
+        setLoading(false)
+        return
+      }
+    }
+    
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    abortControllerRef.current = new AbortController()
+    
     try {
       setLoading(true)
       setError(null)
       
-      const params = new URLSearchParams()
-      if (period !== "all") {
-        params.append("period", period)
-        
-        // Add current year and month for period filtering
-        const now = new Date()
-        if (period === "month") {
-          params.append("year", now.getFullYear().toString())
-          params.append("month", (now.getMonth() + 1).toString())
-        } else if (period === "year") {
-          params.append("year", now.getFullYear().toString())
-        }
-      }
-      
-      const response = await fetch(`/api/summary?${params}`)
+      const response = await fetch(`/api/summary?${params}`, {
+        signal: abortControllerRef.current.signal,
+      })
       
       if (!response.ok) {
         throw new Error("Failed to fetch summary data")
       }
       
       const summaryData = await response.json()
+      
+      // Update cache
+      summaryCache.set(cacheKey, { data: summaryData, timestamp: Date.now() })
+      
       setData(summaryData)
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        // Request was cancelled, don't update state
+        return
+      }
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setLoading(false)
     }
-  }
+  }, [period])
+
+  useEffect(() => {
+    fetchSummaryData()
+    
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [fetchSummaryData])
 
   const handlePeriodChange = (newPeriod: string) => {
     setPeriod(newPeriod)
@@ -169,7 +207,7 @@ export function SummaryChart({ period: initialPeriod = "all", onPeriodChange }: 
       <Card className="border-red-200 bg-red-50">
         <CardContent className="p-6 text-center">
           <p className="text-red-600 mb-4">{tCommon('error')}: {error}</p>
-          <Button onClick={fetchSummaryData} variant="outline">
+          <Button onClick={() => fetchSummaryData(true)} variant="outline">
             {tCommon('tryAgain')}
           </Button>
         </CardContent>
