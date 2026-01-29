@@ -30,7 +30,7 @@
     "clsx": "^2.1.1",
     "groq-sdk": "^0.37.0",
     "lucide-react": "^0.545.0",
-    "next": "^15.4.10",
+    "next": "^16.1.6",
     "next-auth": "^5.0.0-beta.29",
     "next-intl": "^4.6.1",
     "openai": "^6.10.0",

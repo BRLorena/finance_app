@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       userId: session.user.id,
     }
 
-    if (category) {
+    if (category && category !== "All Categories") {
       where.category = category
     }
 
