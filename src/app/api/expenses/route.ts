@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
     const [expenses, total] = await Promise.all([
       prisma.expense.findMany({
         where,
-        orderBy: { date: "desc" },
+        // Newest first; createdAt breaks ties between items on the same date
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
         skip,
         take: limit,
       }),

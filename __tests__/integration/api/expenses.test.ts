@@ -89,7 +89,7 @@ describe('/api/expenses API Route', () => {
         where: { userId: 'user-1' },
         skip: 0,
         take: 10,
-        orderBy: { date: 'desc' },
+        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       })
     })
 
@@ -112,7 +112,7 @@ describe('/api/expenses API Route', () => {
         },
         skip: 0,
         take: 10,
-        orderBy: { date: 'desc' },
+        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       })
     })
 
@@ -138,7 +138,7 @@ describe('/api/expenses API Route', () => {
         },
         skip: 0,
         take: 10,
-        orderBy: { date: 'desc' },
+        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       })
     })
 
