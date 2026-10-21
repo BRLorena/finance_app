@@ -51,8 +51,13 @@ export function rateLimit(
   endpoint: string,
   config: RateLimitConfig
 ): RateLimitResult {
+  // Allow test environments (e.g. E2E runs) to opt out of rate limiting
+  if (process.env.DISABLE_RATE_LIMIT === 'true') {
+    return { success: true, remaining: config.maxRequests, resetIn: 0 }
+  }
+
   cleanup()
-  
+
   const key = `${identifier}:${endpoint}`
   const now = Date.now()
   const windowMs = config.windowSeconds * 1000

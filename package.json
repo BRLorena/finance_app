@@ -12,7 +12,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:unit": "jest --testPathPatterns=unit",
-    "test:integration": "jest --testPathPatterns=integration"
+    "test:integration": "jest --testPathPatterns=integration",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",
@@ -66,5 +67,8 @@
     "supertest": "^7.1.4",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   }
 }
