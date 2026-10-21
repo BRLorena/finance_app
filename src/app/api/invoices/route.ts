@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
 import { invoiceFormSchema } from "@/lib/validations"
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from "@/lib/rate-limit"
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +10,18 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Rate limiting
+    const rateLimitResult = rateLimit(session.user.id, 'invoices', RATE_LIMITS.standard)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult, RATE_LIMITS.standard)
+        }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -45,6 +58,7 @@ export async function GET(request: NextRequest) {
       prisma.invoice.count({ where }),
     ])
 
+    // Add short cache to reduce server load
     return NextResponse.json({
       invoices,
       pagination: {
@@ -52,6 +66,10 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         pages: Math.ceil(total / limit),
+      },
+    }, {
+      headers: {
+        'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
       },
     })
   } catch (error) {

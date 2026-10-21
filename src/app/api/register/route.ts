@@ -2,9 +2,23 @@ import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 import { registerSchema } from "@/lib/validations"
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from "@/lib/rate-limit"
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting by IP for auth endpoints (no user ID yet)
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    const rateLimitResult = rateLimit(ip, 'register', RATE_LIMITS.auth)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many registration attempts. Please try again later." },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult, RATE_LIMITS.auth)
+        }
+      )
+    }
+
     const body = await request.json()
     const validatedFields = registerSchema.safeParse(body)
 

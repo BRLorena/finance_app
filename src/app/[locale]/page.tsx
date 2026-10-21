@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+// Static page - no server-side processing needed per request
+export const dynamic = 'force-static'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">

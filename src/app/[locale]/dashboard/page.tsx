@@ -2,9 +2,11 @@ import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { SummaryChart } from "@/components/summary-chart"
+import { getTranslations } from 'next-intl/server'
 
 export default async function DashboardPage() {
   const session = await auth()
+  const t = await getTranslations('dashboard')
 
   if (!session?.user) {
     redirect("/login")
@@ -21,10 +23,10 @@ export default async function DashboardPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-300 bg-clip-text text-transparent">
-                Welcome back, {session.user.name}!
+                {t('welcome', { name: session.user.name || 'User' })}
               </h1>
               <p className="text-gray-300">
-                Here&apos;s your financial overview for today
+                {t('welcomeSubtitle')}
               </p>
             </div>
           </div>
@@ -35,7 +37,7 @@ export default async function DashboardPage() {
             }}
           >
             <Button variant="outline" type="submit" className="border-white/20 text-gray-300 hover:bg-white/10 hover:text-white px-6 py-3 rounded-xl">
-              <span className="mr-2">👋</span> Sign Out
+              <span className="mr-2">👋</span> {t('signOut')}
             </Button>
           </form>
         </div>

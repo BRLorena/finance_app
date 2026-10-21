@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations } from 'next-intl'
 import { invoiceFormSchema, type InvoiceFormInput } from "../lib/validations"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
@@ -28,13 +29,15 @@ interface InvoiceFormProps {
 }
 
 const statuses = [
-  { value: "PENDING", label: "Pending" },
-  { value: "PAID", label: "Paid" },
-  { value: "OVERDUE", label: "Overdue" },
-  { value: "CANCELLED", label: "Cancelled" },
+  { value: "PENDING", label: "pending" },
+  { value: "PAID", label: "paid" },
+  { value: "OVERDUE", label: "overdue" },
+  { value: "CANCELLED", label: "cancelled" },
 ]
 
 export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) {
+  const t = useTranslations('invoices')
+  const tCommon = useTranslations('common')
   const [isLoading, setIsLoading] = useState(false)
   
   const {
@@ -97,10 +100,10 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
     <Card className="w-full backdrop-blur-md bg-white/10 border border-white/20 shadow-xl">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          {invoice ? 'Edit Invoice' : 'Create New Invoice'}
+          {invoice ? t('editInvoice') : t('createNew')}
         </CardTitle>
         <CardDescription className="text-gray-300">
-          {invoice ? 'Update your invoice details' : 'Generate a professional invoice for your client'}
+          {t('fillDetails')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -108,11 +111,11 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-2">
               <Label htmlFor="invoiceNumber" className="text-sm font-medium text-gray-200">
-                Invoice Number (Optional)
+                {t('invoiceNumber')}
               </Label>
               <Input
                 id="invoiceNumber"
-                placeholder="INV-001 (auto-generated if empty)"
+                placeholder={t('invoiceNumberPlaceholder')}
                 className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                 {...register("invoiceNumber")}
               />
@@ -123,11 +126,11 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
 
             <div className="space-y-2">
               <Label htmlFor="clientName" className="text-sm font-medium text-gray-200">
-                Client Name *
+                {t('clientName')} *
               </Label>
               <Input
                 id="clientName"
-                placeholder="John Doe"
+                placeholder={t('clientNamePlaceholder')}
                 className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                 {...register("clientName")}
               />
@@ -138,12 +141,12 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
 
             <div className="space-y-2">
               <Label htmlFor="clientEmail" className="text-sm font-medium text-gray-200">
-                Client Email (Optional)
+                {t('clientEmail')}
               </Label>
               <Input
                 id="clientEmail"
                 type="email"
-                placeholder="john@example.com"
+                placeholder={t('clientEmailPlaceholder')}
                 className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                 {...register("clientEmail")}
               />
@@ -154,7 +157,7 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
 
             <div className="space-y-2">
               <Label htmlFor="amount" className="text-sm font-medium text-gray-200">
-                Amount ($) *
+                {t('amount')} *
               </Label>
               <Input
                 id="amount"
@@ -171,11 +174,11 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
 
             <div className="space-y-2">
               <Label htmlFor="description" className="text-sm font-medium text-gray-200">
-                Description *
+                {t('description')} *
               </Label>
               <Input
                 id="description"
-                placeholder="Services provided..."
+                placeholder={t('descriptionPlaceholder')}
                 className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                 {...register("description")}
               />
@@ -187,7 +190,7 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="issueDate" className="text-sm font-medium text-gray-200">
-                  Issue Date *
+                  {t('issueDate')} *
                 </Label>
                 <Input
                   id="issueDate"
@@ -202,7 +205,7 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
 
               <div className="space-y-2">
                 <Label htmlFor="dueDate" className="text-sm font-medium text-gray-200">
-                  Due Date *
+                  {t('dueDate')} *
                 </Label>
                 <Input
                   id="dueDate"
@@ -218,7 +221,7 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
 
             <div className="space-y-2">
               <Label htmlFor="status" className="text-sm font-medium text-gray-200">
-                Status
+                {t('status')}
               </Label>
               <select
                 id="status"
@@ -227,7 +230,7 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
               >
                 {statuses.map((status) => (
                   <option key={status.value} value={status.value} className="bg-gray-800 text-white">
-                    {status.label}
+                    {t(`statuses.${status.label}`)}
                   </option>
                 ))}
               </select>
@@ -238,11 +241,11 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="text-sm font-medium text-gray-200">
-                Notes (Optional)
+                {t('notes')}
               </Label>
               <Input
                 id="notes"
-                placeholder="Additional notes..."
+                placeholder={t('notesPlaceholder')}
                 className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                 {...register("notes")}
               />
@@ -258,16 +261,15 @@ export function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFormProps) 
               disabled={isLoading}
               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              {isLoading ? 'Saving...' : invoice ? 'Update Invoice' : 'Create Invoice'}
+              {isLoading ? tCommon('loading') : invoice ? t('updateInvoice') : t('createInvoice')}
             </Button>
             {onCancel && (
               <Button
                 type="button"
-                variant="outline"
                 onClick={onCancel}
-                className="flex-1 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white"
+                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
               >
-                Cancel
+                {tCommon('cancel')}
               </Button>
             )}
           </div>

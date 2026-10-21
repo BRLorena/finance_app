@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from 'next-intl'
 import { InvoiceForm } from "./invoice-form"
 import { InvoiceList } from "./invoice-list"
 
@@ -27,6 +28,7 @@ interface InvoiceManagementProps {
 }
 
 export function InvoiceManagement({ user }: InvoiceManagementProps) {
+  const t = useTranslations('invoices')
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -57,15 +59,15 @@ export function InvoiceManagement({ user }: InvoiceManagementProps) {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-              Invoice Management
+              {t('title')}
             </h1>
             <p className="text-gray-300">
-              Create, track, and manage your professional invoices
+              {t('subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-gray-400">Welcome back,</p>
+              <p className="text-sm text-gray-400">{t('welcomeBack')}</p>
               <p className="text-white font-semibold">{user.name}</p>
             </div>
             <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-600 rounded-xl flex items-center justify-center">

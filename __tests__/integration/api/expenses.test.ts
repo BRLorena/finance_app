@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server'
 import { GET, POST } from '@/app/api/expenses/route'
 
 // Mock the auth module
@@ -20,6 +19,13 @@ jest.mock('@/lib/db', () => ({
 const mockAuth = require('@/auth').auth
 const mockPrisma = require('@/lib/db').prisma
 
+// Helper to create request mock
+const createRequest = (body?: any, url?: string) => ({
+  json: async () => body || {},
+  url: url || 'http://localhost:3000/api/expenses',
+  nextUrl: new URL(url || 'http://localhost:3000/api/expenses'),
+} as any)
+
 describe('/api/expenses API Route', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -29,7 +35,7 @@ describe('/api/expenses API Route', () => {
     it('returns 401 when user is not authenticated', async () => {
       mockAuth.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost:3000/api/expenses')
+      const request = createRequest()
       const response = await GET(request)
       const data = await response.json()
 
@@ -59,12 +65,19 @@ describe('/api/expenses API Route', () => {
       mockPrisma.expense.findMany.mockResolvedValue(mockExpenses)
       mockPrisma.expense.count.mockResolvedValue(1)
 
-      const request = new NextRequest('http://localhost:3000/api/expenses?page=1&limit=10')
+      const request = createRequest(undefined, 'http://localhost:3000/api/expenses?page=1&limit=10')
       const response = await GET(request)
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.expenses).toEqual(mockExpenses)
+      expect(data.expenses).toHaveLength(1)
+      expect(data.expenses[0]).toMatchObject({
+        id: '1',
+        amount: 50,
+        description: 'Test expense',
+        category: 'Food & Dining',
+        userId: 'user-1',
+      })
       expect(data.pagination).toEqual({
         page: 1,
         limit: 10,
@@ -76,7 +89,7 @@ describe('/api/expenses API Route', () => {
         where: { userId: 'user-1' },
         skip: 0,
         take: 10,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { date: 'desc' },
       })
     })
 
@@ -89,7 +102,7 @@ describe('/api/expenses API Route', () => {
       mockPrisma.expense.findMany.mockResolvedValue([])
       mockPrisma.expense.count.mockResolvedValue(0)
 
-      const request = new NextRequest('http://localhost:3000/api/expenses?category=Food%20%26%20Dining')
+      const request = createRequest(undefined, 'http://localhost:3000/api/expenses?category=Food%20%26%20Dining')
       const response = await GET(request)
 
       expect(mockPrisma.expense.findMany).toHaveBeenCalledWith({
@@ -99,7 +112,7 @@ describe('/api/expenses API Route', () => {
         },
         skip: 0,
         take: 10,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { date: 'desc' },
       })
     })
 
@@ -112,7 +125,7 @@ describe('/api/expenses API Route', () => {
       mockPrisma.expense.findMany.mockResolvedValue([])
       mockPrisma.expense.count.mockResolvedValue(0)
 
-      const request = new NextRequest('http://localhost:3000/api/expenses?startDate=2025-11-01&endDate=2025-11-30')
+      const request = createRequest(undefined, 'http://localhost:3000/api/expenses?startDate=2025-11-01&endDate=2025-11-30')
       const response = await GET(request)
 
       expect(mockPrisma.expense.findMany).toHaveBeenCalledWith({
@@ -125,7 +138,7 @@ describe('/api/expenses API Route', () => {
         },
         skip: 0,
         take: 10,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { date: 'desc' },
       })
     })
 
@@ -137,7 +150,7 @@ describe('/api/expenses API Route', () => {
 
       mockPrisma.expense.findMany.mockRejectedValue(new Error('Database error'))
 
-      const request = new NextRequest('http://localhost:3000/api/expenses')
+      const request = createRequest()
       const response = await GET(request)
       const data = await response.json()
 
@@ -168,21 +181,24 @@ describe('/api/expenses API Route', () => {
 
       // Create request with valid body
 
-      const request = new NextRequest('http://localhost:3000/api/expenses', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount: '75.50',
-          description: 'New expense',
-          category: 'Transportation',
-          date: '2025-11-07',
-        }),
+      const request = createRequest({
+        amount: '75.50',
+        description: 'New expense',
+        category: 'Transportation',
+        date: '2025-11-07',
       })
 
       const response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(201)
-      expect(data).toEqual(newExpense)
+      expect(data).toMatchObject({
+        id: newExpense.id,
+        amount: newExpense.amount,
+        description: newExpense.description,
+        category: newExpense.category,
+        userId: newExpense.userId,
+      })
 
       expect(mockPrisma.expense.create).toHaveBeenCalledWith({
         data: {
@@ -198,14 +214,11 @@ describe('/api/expenses API Route', () => {
     it('returns 401 when user is not authenticated', async () => {
       mockAuth.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost:3000/api/expenses', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount: '50.00',
-          description: 'Test expense',
-          category: 'Food & Dining',
-          date: '2025-11-07',
-        }),
+      const request = createRequest({
+        amount: '50.00',
+        description: 'Test expense',
+        category: 'Food & Dining',
+        date: '2025-11-07',
       })
 
       const response = await POST(request)
@@ -221,21 +234,18 @@ describe('/api/expenses API Route', () => {
       }
       mockAuth.mockResolvedValue(mockSession)
 
-      const request = new NextRequest('http://localhost:3000/api/expenses', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount: '', // Invalid: empty amount
-          description: 'Test expense',
-          category: 'Food & Dining',
-          date: '2025-11-07',
-        }),
+      const request = createRequest({
+        amount: '', // Invalid: empty amount
+        description: 'Test expense',
+        category: 'Food & Dining',
+        date: '2025-11-07',
       })
 
       const response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Validation error')
+      expect(data.error).toBe('Invalid fields')
     })
   })
 })

@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { ExpenseList } from "@/components/expense-list"
+import { useTranslations } from 'next-intl'
 // Card components removed as they are not used in this component
 
 export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false)
+  const t = useTranslations('expenses')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
@@ -18,13 +20,13 @@ export default function ExpensesPage() {
       <div className="max-w-7xl mx-auto py-12 px-4 relative z-10">
         <div className="text-center mb-12">
           <div className="inline-block mb-6">
-            <span className="text-sm font-semibold text-green-400 bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20">💰 Smart Expense Tracking</span>
+            <span className="text-sm font-semibold text-green-400 bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20">💰 {t('smartTracking')}</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent mb-6 tracking-tight">
-            Expense Management
+            {t('title')}
           </h1>
           <p className="text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed">
-            Take control of your spending with intelligent tracking, powerful insights, and beautiful visualizations that help you make better financial decisions.
+            {t('subtitle')}
           </p>
         </div>
 

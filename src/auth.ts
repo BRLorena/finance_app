@@ -43,7 +43,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         } catch (error) {
           console.error("Auth error:", error)
-          return null
+          // If we hit a database error (like quota exceeded), throw it so it's not treated as 'invalid credentials'
+          throw new Error(error instanceof Error ? error.message : "Internal server error during authentication")
         }
       }
     })

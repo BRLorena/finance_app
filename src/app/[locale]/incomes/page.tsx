@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from 'next-intl'
 import { IncomeList } from "@/components/income-list"
 
 export default function IncomePage() {
+  const t = useTranslations('incomes')
   const [showForm, setShowForm] = useState(false)
 
   return (
@@ -24,10 +26,10 @@ export default function IncomePage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-green-300 bg-clip-text text-transparent">
-                Income Management
+                {t('title')}
               </h1>
               <p className="text-gray-300">
-                Track your salary, freelance work, and other income sources
+                {t('subtitle')}
               </p>
             </div>
           </div>
