@@ -109,7 +109,7 @@ A modern, full-stack personal finance management application built with Next.js 
    
    # Groq AI (Free tier - get your key from https://console.groq.com/keys)
    GROQ_API_KEY="gsk_your_api_key_here"
-   GROQ_MODEL="llama-3.3-70b-versatile"  # Optional, this is the default
+   GROQ_MODEL="openai/gpt-oss-120b"  # Optional, this is the default
 
    # Testing (optional) - disables API rate limiting for E2E runs
    # DISABLE_RATE_LIMIT="true"

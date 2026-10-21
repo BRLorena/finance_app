@@ -18,8 +18,8 @@ Add to your `.env.local` file:
 # Groq AI Configuration
 GROQ_API_KEY="gsk_your_api_key_here"
 
-# Optional: Change the model (default: llama-3.3-70b-versatile)
-# GROQ_MODEL="llama-3.3-70b-versatile"
+# Optional: Change the model (default: openai/gpt-oss-120b)
+# GROQ_MODEL="openai/gpt-oss-120b"
 ```
 
 ### 3. Deploy to Vercel
@@ -38,14 +38,14 @@ GROQ_API_KEY="gsk_your_api_key_here"
 
 ## 🤖 Available Models
 
-The app uses `llama-3.3-70b-versatile` by default, which provides excellent results for:
+The app uses `openai/gpt-oss-120b` by default, which provides excellent results for:
 - Expense categorization
 - Financial insights generation
 - Natural language expense parsing
 
 Other available models you can set via `GROQ_MODEL`:
-- `llama-3.3-70b-versatile` (recommended)
-- `llama-3.1-70b-versatile`
+- `openai/gpt-oss-120b` (recommended)
+- `openai/gpt-oss-20b` (faster)
 - `mixtral-8x7b-32768`
 - `gemma2-9b-it`
 
@@ -86,7 +86,7 @@ After setup, test the AI features by:
 
 **Model Errors:**
 - Ensure you're using a valid model name
-- Default `llama-3.3-70b-versatile` is recommended
+- Default `openai/gpt-oss-120b` is recommended
 
 ## 📚 Resources
 
