@@ -99,8 +99,9 @@ A modern, full-stack personal finance management application built with Next.js 
    
    Update `.env.local` with your configuration:
    ```bash
-   # Database
-   DATABASE_URL="file:./dev.db"
+   # Database (PostgreSQL, e.g. a free Neon project)
+   DATABASE_URL="postgresql://...-pooler.../neondb?sslmode=require"   # pooled connection
+   POSTGRES_URL="postgresql://.../neondb?sslmode=require"             # direct connection
    
    # NextAuth
    NEXTAUTH_URL="http://localhost:3000"
@@ -109,6 +110,9 @@ A modern, full-stack personal finance management application built with Next.js 
    # Groq AI (Free tier - get your key from https://console.groq.com/keys)
    GROQ_API_KEY="gsk_your_api_key_here"
    GROQ_MODEL="llama-3.3-70b-versatile"  # Optional, this is the default
+
+   # Testing (optional) - disables API rate limiting for E2E runs
+   # DISABLE_RATE_LIMIT="true"
    ```
    
    **Get your free Groq API key:**
@@ -120,8 +124,11 @@ A modern, full-stack personal finance management application built with Next.js 
 4. **Set up the database**
    ```bash
    npx prisma generate
-   npx prisma migrate dev --name init
+   npx prisma db push   # create tables
+   npm run db:seed      # optional: QA users test@example.com and demo@example.com
    ```
+
+   The seed is idempotent: re-running it resets the data of the seeded users only.
 
 5. **Start the development server**
    ```bash
