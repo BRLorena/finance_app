@@ -5,7 +5,8 @@
 
 import Groq from 'groq-sdk'
 
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+// llama-3.3-70b-versatile is no longer available on Groq's free tier (model_not_found)
+const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b'
 
 // Lazy initialization of Groq client
 let groqClient: Groq | null = null
@@ -45,7 +46,11 @@ async function generateWithGroq(
       ],
       model: GROQ_MODEL,
       temperature,
-      max_tokens: 1024,
+      // gpt-oss models reason before answering; reasoning tokens count towards
+      // max_tokens, so keep effort low and leave room for the answer
+      max_tokens: 2048,
+      reasoning_effort: 'low',
+      include_reasoning: false,
     })
 
     const response = chatCompletion.choices[0]?.message?.content || ''

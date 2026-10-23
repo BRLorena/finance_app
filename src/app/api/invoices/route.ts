@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
       prisma.invoice.count({ where }),
     ])
 
-    // Add short cache to reduce server load
+    // Lists change after every create/update/delete; a cached (stale-while-revalidate)
+    // response makes new items invisible until the cache expires
     return NextResponse.json({
       invoices,
       pagination: {
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       },
     }, {
       headers: {
-        'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
+        'Cache-Control': 'private, no-store',
       },
     })
   } catch (error) {

@@ -28,7 +28,7 @@ describe('Groq AI Library', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     process.env.GROQ_API_KEY = 'test-api-key'
-    process.env.GROQ_MODEL = 'llama-3.3-70b-versatile'
+    process.env.GROQ_MODEL = 'openai/gpt-oss-120b'
   })
 
   afterEach(() => {
@@ -60,9 +60,11 @@ describe('Groq AI Library', () => {
             content: 'Test prompt',
           },
         ],
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         temperature: 0.5,
-        max_tokens: 1024,
+        max_tokens: 2048,
+        reasoning_effort: 'low',
+        include_reasoning: false,
       })
     })
 
@@ -310,7 +312,7 @@ describe('Groq AI Library', () => {
     it('should return provider name with model', () => {
       const provider = getAIProvider()
       expect(provider).toContain('Groq')
-      expect(provider).toContain('llama')
+      expect(provider).toContain('gpt-oss')
     })
   })
 })
