@@ -28,6 +28,20 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year") || new Date().getFullYear().toString()
     const month = searchParams.get("month") || (new Date().getMonth() + 1).toString()
 
+    // Validate before building dates: a non-numeric year/month used to reach Prisma as an
+    // Invalid Date and throw, which the route then leaked back to the client.
+    if (!["all", "month", "year"].includes(period)) {
+      return NextResponse.json({ error: "Invalid period" }, { status: 400 })
+    }
+    const yearNum = Number.parseInt(year, 10)
+    const monthNum = Number.parseInt(month, 10)
+    if (period !== "all" && (!Number.isInteger(yearNum) || yearNum < 1900 || yearNum > 9999)) {
+      return NextResponse.json({ error: "Invalid year" }, { status: 400 })
+    }
+    if (period === "month" && (!Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12)) {
+      return NextResponse.json({ error: "Invalid month" }, { status: 400 })
+    }
+
     // Calculate date range based on period
     let startDate: Date
     let endDate: Date = new Date()
@@ -390,13 +404,10 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
+    // Log the detail server-side; never return it to the client (it exposed the ORM query).
     console.error("Error generating summary:", error)
     return NextResponse.json(
-      { 
-        error: "Internal server error", 
-        details: error instanceof Error ? error.message : "Unknown error",
-        stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : 'No stack trace') : undefined
-      },
+      { error: "Internal server error" },
       { status: 500 }
     )
   }
